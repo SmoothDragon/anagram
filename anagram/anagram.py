@@ -149,16 +149,10 @@ if __name__ == "__main__":
                 default='OWL14', help='Choose dictionary.')
     parser.add_argument('--min', type=int, action='store', dest='min', default=None)
     parser.add_argument('--max', type=int, action='store', dest='max', default=None)
-    parser.add_argument('-t', '--test', action='store_true', dest='test',
-                default=False, help='Run doctests.')
+    parser.add_argument('-a', '--all', action='store_true', dest='all', 
+                default=False, help='Return all anagrams of length 3 or more.')
     parser.add_argument('letters', nargs='?', type=str, help='Letters to anagram.')
     results = parser.parse_args()
-
-    # Run DocTests?
-    if results.test:
-        import doctest
-        doctest.testmod()
-        exit(0)
 
     # Abort if dictionary is not valid
     if results.dict not in DICT:
@@ -179,6 +173,8 @@ if __name__ == "__main__":
     if results.max < results.min:
         parser.print_help()
         exit(-1)
+    if results.all:
+        results.min = 3
     txt_file = '/usr/share/dict/'+results.dict+'.txt'
     with open(txt_file, 'rt') as infile:
         words = (line.strip() for line in infile)
