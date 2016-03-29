@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 info = r'''Find anagrams of letters
 
 Dictionary options are:
@@ -177,7 +179,7 @@ if __name__ == "__main__":
     if results.max < results.min:
         parser.print_help()
         exit(-1)
-    txt_file = '/usr/local/share/dict/'+results.dict+'.txt'
+    txt_file = '/usr/share/dict/'+results.dict+'.txt'
     with open(txt_file, 'rt') as infile:
         words = (line.strip() for line in infile)
         for word in words:
