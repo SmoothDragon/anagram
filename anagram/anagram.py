@@ -142,6 +142,7 @@ def all_func(F):
 if __name__ == "__main__":
     import sys
     import argparse
+    import os.path
 
     parser = argparse.ArgumentParser(description=info,
                 formatter_class=argparse.RawTextHelpFormatter)
@@ -175,16 +176,20 @@ if __name__ == "__main__":
         exit(-1)
     if results.all:
         results.min = 3
-    txt_file = '/usr/share/dict/'+results.dict+'.txt'
-    with open(txt_file, 'rt') as infile:
-        words = (line.strip() for line in infile)
-        for word in words:
-            if len(word) < results.min:
-                continue
-            if len(word) > results.max:
-                continue
-            target = len(word)
-            for letter in L:
-                target -= min(L[letter], word.count(letter))
-            if target <= blanks:
-                print(word)
+    txt_file = os.path.expanduser('~/.config/anagram/dict.txt')
+    try:
+        with open(txt_file, 'rt') as infile:
+            words = (line.strip() for line in infile)
+            for word in words:
+                if len(word) < results.min:
+                    continue
+                if len(word) > results.max:
+                    continue
+                target = len(word)
+                for letter in L:
+                    target -= min(L[letter], word.count(letter))
+                if target <= blanks:
+                    print(word)
+    except FileNotFoundError:
+        print('Link $HOME/.config/anagram/dict.txt to the desired dictionary.')
+        print('  i.e. ln -s /usr/share/dict/linux.words ~/.config/anagram/dict.txt')
