@@ -4,12 +4,21 @@ from __future__ import print_function
 
 info = r'''Find anagrams of letters
 
-Dictionary options are:
-    SSWL15 - School Scrabble 2015
-    TWL06  - Tournament word list 2006
-    OWL14  - Tournament word list 2014
-    CSW12  - Collins word list 2012
-    OSPD4  - Official Scrabble Players Dictionary 4th edition
+By default, 'anagram' uses /usr/share/dict/linux.words as the dictionary.
+
+To use a custom dictionary, change the symlink at
+    ~/.config/anagram/dict.txt'
+to point to the desired dictionary.
+
+This utility is useful in conjuction with grep. Some examples:
+
+    1) Find anagrams of "aeionrst" containing the sequence "nor".
+        anagram aeionrst | grep nor
+    Result: senorita
+
+    2) Find anagrams of "raze_" starting with "z".
+        anagram raze_ | grep "^z"
+    Result: zaire zebra zerda
 '''
 
 freq = 'QJXZWKVFYBHGMPUDCLOTNRAISE' # Frequency order obtained from counting word.lst
@@ -142,7 +151,9 @@ def all_func(F):
 if __name__ == "__main__":
     import sys
     import argparse
+    import os
     import os.path
+    import errno
 
     parser = argparse.ArgumentParser(description=info,
                 formatter_class=argparse.RawTextHelpFormatter)
@@ -152,7 +163,8 @@ if __name__ == "__main__":
     parser.add_argument('--max', type=int, action='store', dest='max', default=None)
     parser.add_argument('-a', '--all', action='store_true', dest='all', 
                 default=False, help='Return all anagrams of length 3 or more.')
-    parser.add_argument('letters', nargs='?', type=str, help='Letters to anagram.')
+    parser.add_argument('letters', nargs='?', type=str, 
+            help='Letters to anagram. Use _ for blanks.')
     results = parser.parse_args()
 
     # Abort if dictionary is not valid
@@ -176,20 +188,28 @@ if __name__ == "__main__":
         exit(-1)
     if results.all:
         results.min = 3
-    txt_file = os.path.expanduser('~/.config/anagram/dict.txt')
-    try:
-        with open(txt_file, 'rt') as infile:
-            words = (line.strip() for line in infile)
-            for word in words:
-                if len(word) < results.min:
-                    continue
-                if len(word) > results.max:
-                    continue
-                target = len(word)
-                for letter in L:
-                    target -= min(L[letter], word.count(letter))
-                if target <= blanks:
-                    print(word)
-    except FileNotFoundError:
-        print('Link $HOME/.config/anagram/dict.txt to the desired dictionary.')
-        print('  i.e. ln -s /usr/share/dict/linux.words ~/.config/anagram/dict.txt')
+    path = os.path.expanduser('~/.config/anagram')
+    txt_file = os.path.join(path, 'dict.txt')
+    if not os.path.isfile(txt_file):
+        try:
+            os.makedirs(path)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(path):
+                pass
+            else:
+                raise
+        os.symlink('/usr/share/dict/linux.words', txt_file)
+    with open(txt_file, 'rt') as infile:
+        words = (line.strip() for line in infile)
+        for word in words:
+            if len(word) < results.min:
+                continue
+            if len(word) > results.max:
+                continue
+            target = len(word)
+            WORD = word.upper()
+            for letter in L:
+                target -= min(L[letter], WORD.count(letter))
+            if target <= blanks:
+                print(word)
+    
