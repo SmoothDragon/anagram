@@ -2,6 +2,14 @@
 
 from __future__ import print_function
 
+try:
+    # Python2
+    from itertools import izip_longest as zip_longest
+    # from itertools import ifilter as filter
+except ImportError:
+    # Python3
+    from itertools import zip_longest
+
 info = r'''Find anagrams of letters
 
 By default, 'anagram' uses /usr/share/dict/linux.words as the dictionary.
@@ -20,6 +28,8 @@ This utility is useful in conjuction with grep. Some examples:
         anagram raze_ | grep "^z"
     Result: zaire zebra zerda
 '''
+
+import string
 
 freq = 'QJXZWKVFYBHGMPUDCLOTNRAISE' # Frequency order obtained from counting word.lst
 primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101]
@@ -105,16 +115,46 @@ def contains_filter(letters, stream):
         if product((D[ch] for ch in line[:-1]))%n == 0:
             yield line
 
-def prepQuery(query):
-    '''Prepare incoming query for stream testing.
-    Uppercase all letters. Replace all "blanks" with the "@" symbol.
+def distill_query(letters):
+    '''Break input into (required, optional, blanks).
+    Uppercase letters are required.
+    Lowercase letters are optional.
+    A single numeric digit indicates the number of blanks.
+    >>> distill_query('aDbEdF2')
+    ('DEF', 'ABD', 2)
+    >>> distill_query('rates1')
+    ('', 'AERST', 1)
     '''
-    query = query.upper()
-    query = query.replace('_', '@')
-    query = query.replace('?', '@')
-    blanks = query.count('@')
-    letters = sorted(query.replace('@', ''))
-    return letters, blanks
+    required = filter(lambda x: x in string.ascii_uppercase, letters)
+    optional = filter(lambda x: x in string.ascii_lowercase, letters)
+    optional = optional.upper()
+    numbers = filter(lambda x: x in string.digits, letters)
+    blanks = int('0' + numbers)
+    return (''.join(sorted(required)), ''.join(sorted(optional)), blanks)
+
+def query_filter(query):
+    '''Filter on words that satisfy required, optional and blank requirements.
+    >>> q = query_filter(('EI', 'NRST', 1))
+    >>> [q(w) for w in ['TINE', 'ZINE', 'TUBE', 'RETINAL', 'RETAINS', 'EAU']]
+    [True, True, False, False, True, False]
+    '''
+    required, optional, blanks = query
+    req_dict = {ch:required.count(ch) for ch in set(required)}
+    opt_dict = {ch:optional.count(ch) for ch in set(optional)}
+    def q_filter(word):
+        target = len(word)
+        for ch in req_dict:
+            if word.count(ch) < req_dict[ch]:
+                return False
+            target -= req_dict[ch]
+            word = word.replace(ch, '', req_dict[ch])
+        for ch in opt_dict:
+            target -= min(opt_dict[ch], word.count(ch))
+            if target <= blanks:
+                return True
+        return False
+    return q_filter
+
 
 def len_range(start, stop):
     '''Returns a function that recognizes words with length in [start, stop).
@@ -177,7 +217,19 @@ if __name__ == "__main__":
         parser.print_help()
         exit(-1)
 
-    letters, blanks = prepQuery(results.letters)
+    query = distill_query(results.letters)
+    f = query_filter(query)
+
+    # Find dictionary location based on script location
+    head, tail = os.path.split(__file__)
+    dictfile = os.path.join(head, '..', 'data', 'OWL14.txt')
+
+    with open(dictfile, 'rt') as infile:
+        words = (line.strip() for line in infile)
+        for word in filter(f, words):
+            print(word)
+    exit(0)
+
     L = {letter:letters.count(letter) for letter in letters}
     if results.min is None:
         results.min = len(letters) + blanks
@@ -188,28 +240,3 @@ if __name__ == "__main__":
         exit(-1)
     if results.all:
         results.min = 3
-    path = os.path.expanduser('~/.config/anagram')
-    txt_file = os.path.join(path, 'dict.txt')
-    if not os.path.isfile(txt_file):
-        try:
-            os.makedirs(path)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST and os.path.isdir(path):
-                pass
-            else:
-                raise
-        os.symlink('/usr/share/dict/linux.words', txt_file)
-    with open(txt_file, 'rt') as infile:
-        words = (line.strip() for line in infile)
-        for word in words:
-            if len(word) < results.min:
-                continue
-            if len(word) > results.max:
-                continue
-            target = len(word)
-            WORD = word.upper()
-            for letter in L:
-                target -= min(L[letter], WORD.count(letter))
-            if target <= blanks:
-                print(word)
-    
