@@ -35,7 +35,7 @@ setup(
     ],
     package_dir={'anagram':
                  'anagram'},
-    scripts=['bin/anagram',],
+    scripts=['bin/anagram', 'bin/define',],
     include_package_data=True,
     install_requires=requirements,
     license="GPLv3",
