@@ -10,7 +10,7 @@ Tests for `anagram` module.
 
 import unittest
 
-from anagram import anagram
+from anagram import *
 
 
 class TestAnagram(unittest.TestCase):
@@ -21,8 +21,8 @@ class TestAnagram(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_000_something(self):
-        pass
+    def test_distill_input(self):
+        self.assertEqual(distill_query('aBb2eE'), ('BE', 'ABE', 2))
 
 
 if __name__ == '__main__':
