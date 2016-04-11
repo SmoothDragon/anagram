@@ -5,7 +5,7 @@ from __future__ import print_function
 try:
     # Python2
     from itertools import izip_longest as zip_longest
-    # from itertools import ifilter as filter
+    from itertools import ifilter as filter
 except ImportError:
     # Python3
     from itertools import zip_longest
@@ -127,16 +127,19 @@ def distill_query(letters):
     '''
     required = filter(lambda x: x in string.ascii_uppercase, letters)
     optional = filter(lambda x: x in string.ascii_lowercase, letters)
-    optional = optional.upper()
+    # optional = optional.upper()
     numbers = filter(lambda x: x in string.digits, letters)
-    blanks = int('0' + numbers)
-    return (''.join(sorted(required)), ''.join(sorted(optional)), blanks)
+    blanks = int('0' + ''.join(numbers))
+    return (''.join(sorted(required)), ''.join(sorted(x.upper() for x in optional)), blanks)
 
 def query_filter(query):
     '''Filter on words that satisfy required, optional and blank requirements.
     >>> q = query_filter(('EI', 'NRST', 1))
     >>> [q(w) for w in ['TINE', 'ZINE', 'TUBE', 'RETINAL', 'RETAINS', 'EAU']]
     [True, True, False, False, True, False]
+    >>> q = query_filter(('UW', '', 1))
+    >>> [q(w) for w in ['WUD', 'WUZ', 'WIZ']]
+    [True, True, False]
     '''
     required, optional, blanks = query
     req_dict = {ch:required.count(ch) for ch in set(required)}
@@ -150,9 +153,7 @@ def query_filter(query):
             word = word.replace(ch, '', req_dict[ch])
         for ch in opt_dict:
             target -= min(opt_dict[ch], word.count(ch))
-            if target <= blanks:
-                return True
-        return False
+        return target <= blanks
     return q_filter
 
 
