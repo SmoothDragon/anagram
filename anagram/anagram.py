@@ -189,7 +189,8 @@ def all_func(F):
         return True
     return multi_filter
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+def main():
     import sys
     import argparse
     import os
@@ -223,7 +224,9 @@ if __name__ == "__main__":
 
     # Find dictionary location based on script location
     head, tail = os.path.split(__file__)
-    dictfile = os.path.join(head, '..', 'data', 'OWL14.txt')
+    dictfile = os.path.join(head, '..', 'share', 'OWL14.txt')
+    dictfile = os.path.join(head, '..', 'anagram', 'data', 'OWL14.txt')
+    # dictfile = os.path.join(__file__, 'data', 'OWL14.txt')
 
     with open(dictfile, 'rt') as infile:
         words = (line.strip() for line in infile)

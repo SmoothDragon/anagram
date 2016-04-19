@@ -35,7 +35,14 @@ setup(
     ],
     package_dir={'anagram':
                  'anagram'},
-    scripts=['bin/anagram', 'bin/define',],
+    package_data={'anagram': ['data/*.txt', 'data/*.def'],},
+    entry_points={
+        'console_scripts': [
+            'anagram=anagram:main',
+            'define=anagram.define:main',
+            ],
+        },
+    # scripts=['bin/anagram', 'bin/define',],
     include_package_data=True,
     install_requires=requirements,
     license="GPLv3",

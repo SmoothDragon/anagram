@@ -14,7 +14,7 @@ Dictionary options are:
 
 DICT = ['SSWL15', 'TWL06', 'OWL14', 'CSW12', 'OSPD4']
 
-if __name__ == "__main__":
+def main():
     import sys
     import argparse
     import os
@@ -33,7 +33,9 @@ if __name__ == "__main__":
     words = [word.upper() for word in sys.argv[1:]]
     # Find dictionary location based on script location
     head, tail = os.path.split(__file__)
-    def_file = os.path.join(head, '..', 'data', results.dict+'.def')
+    # def_file = os.path.join(head, '..', 'share', results.dict+'.def')
+    def_file = os.path.join(head, 'data', 'OWL14.def')
+    # def_file = os.path.join(__file__, 'data', 'OWL14.def')
 
     # def_file = '/usr/share/dict/'+results.dict+'.def'
     with open(def_file) as infile:
